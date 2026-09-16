@@ -118,9 +118,6 @@
 <script type="module" src="https://unpkg.com/esp-web-tools@10/dist/web/install-button.js?module"></script>
 <script>
 const DEVICES = [
-  { group:"AWOK", id:"awok-dual-mini-v2", name:"AWOK Dual ESP32 Mini v2", chip:"ESP32", flash:"16 MB", ver:"1.5.6",
-    dl:"Flip the DIP switch to the <b>white ESP32</b> side (CP2102 port). Auto-reset — no button to hold.",
-    note:"128×128 ST7735S display. If flashing reports “ESP32-S2”, flip the DIP back to the white ESP32 side." },
   { group:"M5Stack", id:"m5cardputer", name:"M5Cardputer", chip:"ESP32-S3", flash:"8 MB", ver:"1.5.5",
     dl:"Hold the <b>G0</b> button <b>while</b> plugging in USB to enter download mode.",
     note:"" },
@@ -132,6 +129,9 @@ const DEVICES = [
     dl:"Auto-reset over USB (CP2104). No button to hold, normally.", note:"" },
   { group:"M5Stack", id:"m5fire", name:"M5Stack Fire", chip:"ESP32", flash:"16 MB", ver:"1.3.9",
     dl:"Auto-reset over USB. If it fails, hold the side reset button while plugging in.", note:"" },
+  { group:"AWOK", id:"awok-dual-mini-v2", name:"AWOK Dual ESP32 Mini v2", chip:"ESP32", flash:"16 MB", ver:"1.5.6",
+    dl:"Flip the DIP switch to the <b>white ESP32</b> side (CP2102 port). Auto-reset — no button to hold.",
+    note:"128×128 ST7735S display. If flashing reports “ESP32-S2”, flip the DIP back to the white ESP32 side." },
   { group:"Beta", id:"m5stick", name:"M5StickC Plus / Plus2", chip:"ESP32", flash:"4 MB", ver:"beta",
     dl:"Auto-reset over USB.", note:"Beta build — partial features." },
   { group:"Beta", id:"cyd2usb", name:"CYD 2×USB — Cheap Yellow Display", chip:"ESP32", flash:"4 MB", ver:"beta",
