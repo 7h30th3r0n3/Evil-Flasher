@@ -1,0 +1,9 @@
+{
+  "name": "Evil-CYD1USB (Cheap Yellow Display) — beta",
+  "version": "beta",
+  "new_install_prompt_erase": true,
+  "builds": [
+    { "chipFamily": "ESP32",
+      "parts": [ { "path": "https://raw.githubusercontent.com/7h30th3r0n3/Evil-M5Project/main/binaries/Evil-CYD1USB-Beta.bin", "offset": 0 } ] }
+  ]
+}

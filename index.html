@@ -134,8 +134,10 @@ const DEVICES = [
     dl:"Auto-reset over USB. If it fails, hold the side reset button while plugging in.", note:"" },
   { group:"Beta", id:"m5stick", name:"M5StickC Plus / Plus2", chip:"ESP32", flash:"4 MB", ver:"beta",
     dl:"Auto-reset over USB.", note:"Beta build — partial features." },
-  { group:"Beta", id:"cyd2usb", name:"CYD — Cheap Yellow Display (2×USB)", chip:"ESP32", flash:"4 MB", ver:"beta",
-    dl:"Plug into the <b>USB-C / micro</b> port wired to the CP2102. Auto-reset.", note:"Beta build." },
+  { group:"Beta", id:"cyd2usb", name:"CYD 2×USB — Cheap Yellow Display", chip:"ESP32", flash:"4 MB", ver:"beta",
+    dl:"Plug into the <b>USB-C</b> port (wired to the CP2102/CH340). Auto-reset.", note:"Beta build. Dual-USB board — use the USB-C port for flashing." },
+  { group:"Beta", id:"cyd1usb", name:"CYD 1×USB — Cheap Yellow Display", chip:"ESP32", flash:"4 MB", ver:"beta",
+    dl:"Plug into the single <b>micro-USB</b> port (CH340). Auto-reset.", note:"Beta build. Single-USB board." },
 ];
 
 const sel = document.getElementById('device');
