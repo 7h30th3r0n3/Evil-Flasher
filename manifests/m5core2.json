@@ -1,0 +1,9 @@
+{
+  "name": "Evil-Core2 (M5Stack Core2)",
+  "version": "1.3.9",
+  "new_install_prompt_erase": true,
+  "builds": [
+    { "chipFamily": "ESP32",
+      "parts": [ { "path": "https://raw.githubusercontent.com/7h30th3r0n3/Evil-M5Project/main/binaries/Evil-Core2-v1.3.9.bin", "offset": 0 } ] }
+  ]
+}

@@ -1,0 +1,9 @@
+{
+  "name": "Evil-Cardputer → AWOK Dual Mini v2",
+  "version": "1.5.6",
+  "new_install_prompt_erase": true,
+  "builds": [
+    { "chipFamily": "ESP32",
+      "parts": [ { "path": "../firmware/awok-dual-mini-v2/awok-dual-mini-v2-v1.5.6.bin", "offset": 0 } ] }
+  ]
+}
