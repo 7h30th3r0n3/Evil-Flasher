@@ -1,0 +1,9 @@
+{
+  "name": "Evil-Cardputer (M5Cardputer ADV)",
+  "version": "1.4.5",
+  "new_install_prompt_erase": true,
+  "builds": [
+    { "chipFamily": "ESP32-S3",
+      "parts": [ { "path": "https://raw.githubusercontent.com/7h30th3r0n3/Evil-M5Project/main/binaries/Evil-ADV-V1.4.5.bin", "offset": 0 } ] }
+  ]
+}
