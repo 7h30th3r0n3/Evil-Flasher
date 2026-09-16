@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-# Regénère le merged bin AWOK Dual Mini v2 (ESP32 classic) flashable à l'offset 0x0.
-# Prérequis : esptool (v5+) et les artefacts de compilation arduino-cli du sketch awok.
+# Rebuild the AWOK Dual Mini v2 merged bin (classic ESP32), flashable at offset 0x0.
+# Requires: esptool (v5+) and the arduino-cli build artifacts of the awok sketch.
 set -euo pipefail
 SK="${1:?usage: build-awok.sh <arduino-sketch-build-dir> [version]}"
 VER="${2:-1.5.6}"
