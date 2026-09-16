@@ -4,64 +4,112 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Evil-Flasher</title>
-<meta name="description" content="Flash Evil-M5Project firmware onto your ESP32 straight from the browser.">
+<meta name="description" content="Flash Evil-M5Project firmware onto your ESP32 straight from the browser. No install.">
+<link rel="icon" href="assets/favicon.ico" sizes="any">
+<link rel="icon" type="image/png" sizes="32x32" href="assets/favicon-32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="assets/favicon-16.png">
+<link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
+<meta property="og:title" content="Evil-Flasher">
+<meta property="og:description" content="Flash Evil-M5Project onto your ESP32 straight from the browser. No install.">
+<meta property="og:image" content="https://7h30th3r0n3.github.io/Evil-Flasher/assets/logo.jpg">
+<meta property="og:type" content="website">
+<meta name="twitter:card" content="summary">
+<meta name="theme-color" content="#08060a">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;800;900&family=Share+Tech+Mono&display=swap" rel="stylesheet">
 <style>
   :root{
-    --bg:#0a0c10; --bg2:#12151c; --card:#161a23; --line:#242a37;
-    --txt:#e6e9ef; --dim:#9aa4b2; --accent:#38e07b; --accent2:#12b866;
-    --danger:#ff5c5c; --warn:#f5b544; --radius:14px;
+    --bg:#08060a; --bg2:#140f1b; --card:#17121f; --line:#2d2138;
+    --txt:#f1eaf2; --dim:#a99fb4;
+    --fire1:#ff9a20; --fire2:#ff3b1f; --fire3:#c81d4a;
+    --accent:#ff5a1f; --cyan:#26cfe6; --purple:#8a2be2;
+    --glow:rgba(255,74,24,.55); --warn:#f5b544; --radius:14px;
   }
   *{box-sizing:border-box}
-  body{margin:0;background:radial-gradient(1200px 600px at 50% -10%,#12241b 0%,var(--bg) 60%);
-    color:var(--txt);font:16px/1.55 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Ubuntu,sans-serif;
-    min-height:100vh;padding:0 16px 64px}
+  html{-webkit-text-size-adjust:100%}
+  body{margin:0;color:var(--txt);min-height:100vh;padding:0 16px 64px;
+    font:16px/1.55 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Ubuntu,sans-serif;
+    background:
+      radial-gradient(900px 520px at 50% -8%, rgba(200,29,74,.28) 0%, rgba(138,43,226,.14) 34%, transparent 66%),
+      radial-gradient(700px 500px at 50% 0%, rgba(255,74,24,.20) 0%, transparent 60%),
+      var(--bg);
+    background-attachment:fixed}
   .wrap{max-width:760px;margin:0 auto}
-  header{text-align:center;padding:56px 0 24px}
-  .logo{font-size:40px;font-weight:800;letter-spacing:-1px;margin:0}
-  .logo span{color:var(--accent)}
-  .tag{color:var(--dim);margin:8px 0 0;font-size:16px}
-  .badge{display:inline-block;margin-top:14px;padding:4px 12px;border:1px solid var(--line);
-    border-radius:999px;color:var(--dim);font-size:13px}
-  .card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);
-    padding:22px;margin:18px 0}
-  label.fld{display:block;font-size:13px;text-transform:uppercase;letter-spacing:.08em;
-    color:var(--dim);margin:0 0 8px}
+
+  header{text-align:center;padding:44px 0 20px;position:relative}
+  .logo-wrap{position:relative;display:inline-block;line-height:0}
+  .logo-wrap::before{content:"";position:absolute;inset:-18%;border-radius:50%;z-index:-1;
+    background:radial-gradient(circle, var(--glow) 0%, rgba(200,29,74,.25) 45%, transparent 72%);
+    filter:blur(6px);animation:pulse 3.4s ease-in-out infinite}
+  @keyframes pulse{0%,100%{opacity:.7;transform:scale(.96)}50%{opacity:1;transform:scale(1.06)}}
+  .logo{width:140px;height:140px;border-radius:22px;object-fit:cover;
+    border:1px solid rgba(255,120,40,.35);box-shadow:0 0 34px var(--glow),0 8px 40px rgba(0,0,0,.6)}
+  @media (prefers-reduced-motion:reduce){.logo-wrap::before{animation:none}}
+
+  .wordmark{font-family:"Orbitron",sans-serif;font-weight:900;font-size:clamp(34px,9vw,52px);
+    letter-spacing:2px;margin:18px 0 0;line-height:1;text-transform:uppercase;
+    background:linear-gradient(180deg,#ffd07a 0%,var(--fire1) 38%,var(--fire2) 72%,var(--fire3) 100%);
+    -webkit-background-clip:text;background-clip:text;color:transparent;
+    filter:drop-shadow(0 2px 10px rgba(255,60,20,.45))}
+  .wordmark .dot{color:var(--cyan);-webkit-text-fill-color:var(--cyan)}
+  .tag{color:var(--dim);margin:12px 0 0;font-size:16px}
+  .badge{display:inline-flex;gap:7px;align-items:center;margin-top:16px;padding:5px 14px;
+    border:1px solid rgba(255,120,40,.3);border-radius:999px;color:#ffcf9e;font-size:13px;
+    font-family:"Share Tech Mono",monospace;background:rgba(255,74,24,.06)}
+
+  .card{background:linear-gradient(180deg,rgba(255,255,255,.02),transparent),var(--card);
+    border:1px solid var(--line);border-radius:var(--radius);padding:22px;margin:18px 0;
+    box-shadow:0 1px 0 rgba(255,255,255,.03) inset}
+  label.fld{display:block;font-family:"Share Tech Mono",monospace;font-size:12px;
+    text-transform:uppercase;letter-spacing:.12em;color:var(--fire1);margin:0 0 10px}
   select{width:100%;padding:13px 14px;background:var(--bg2);color:var(--txt);
     border:1px solid var(--line);border-radius:10px;font-size:16px;appearance:none;
-    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%239aa4b2' d='M6 8 0 0h12z'/%3E%3C/svg%3E");
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%23ff8a2b' d='M6 8 0 0h12z'/%3E%3C/svg%3E");
     background-repeat:no-repeat;background-position:right 16px center}
+  select:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px rgba(255,74,24,.18)}
   .meta{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px}
-  .chip{font-size:13px;color:var(--dim);background:var(--bg2);border:1px solid var(--line);
-    padding:5px 11px;border-radius:8px}
-  .chip b{color:var(--txt);font-weight:600}
-  .cta{display:flex;justify-content:center;margin:22px 0 4px}
-  esp-web-install-button{--esp-tools-button-color:#04120a;--esp-tools-button-background-color:var(--accent);
-    --esp-tools-button-border-radius:10px}
-  .btn-fallback{padding:13px 22px;border-radius:10px;background:#2a2f3a;color:var(--dim);
+  .chip{font-family:"Share Tech Mono",monospace;font-size:13px;color:var(--dim);background:var(--bg2);
+    border:1px solid var(--line);padding:5px 11px;border-radius:8px}
+  .chip b{color:var(--txt);font-weight:400}
+
+  .cta{display:flex;justify-content:center;margin:24px 0 4px}
+  .btn-install{padding:15px 30px;border:0;border-radius:12px;cursor:pointer;
+    font-family:"Orbitron",sans-serif;font-weight:800;font-size:16px;letter-spacing:.5px;color:#1a0600;
+    background:linear-gradient(135deg,var(--fire1),var(--fire2) 55%,var(--fire3));
+    box-shadow:0 6px 22px rgba(255,60,20,.4),0 0 0 1px rgba(255,150,80,.35) inset;
+    transition:transform .12s ease,box-shadow .12s ease}
+  .btn-install:hover{transform:translateY(-1px);box-shadow:0 10px 30px rgba(255,60,20,.55),0 0 0 1px rgba(255,180,120,.5) inset}
+  .btn-fallback{padding:14px 22px;border-radius:12px;background:#241a2e;color:var(--dim);
     border:1px solid var(--line);font-size:16px;cursor:not-allowed}
+
   .notes{margin-top:18px;border-top:1px solid var(--line);padding-top:16px}
-  .notes h3{margin:0 0 8px;font-size:14px;text-transform:uppercase;letter-spacing:.06em;color:var(--accent)}
+  .notes h3{margin:0 0 10px;font-family:"Share Tech Mono",monospace;font-size:13px;
+    text-transform:uppercase;letter-spacing:.1em;color:var(--fire1)}
   .notes ul{margin:0;padding-left:20px;color:var(--dim)}
   .notes li{margin:5px 0}
   .notes li b{color:var(--txt)}
   .alert{border-radius:10px;padding:12px 14px;font-size:14px;margin-top:6px}
   .alert.warn{background:rgba(245,181,68,.09);border:1px solid rgba(245,181,68,.35);color:#f5cf8f}
-  .alert.err{background:rgba(255,92,92,.09);border:1px solid rgba(255,92,92,.35);color:#ffb0b0;display:none}
+  .alert.err{background:rgba(255,59,31,.1);border:1px solid rgba(255,59,31,.4);color:#ffb0a0;display:none}
   .steps{counter-reset:s;list-style:none;padding:0;margin:0}
   .steps li{position:relative;padding:6px 0 6px 40px;color:var(--dim)}
   .steps li::before{counter-increment:s;content:counter(s);position:absolute;left:0;top:6px;
-    width:26px;height:26px;border-radius:50%;background:var(--bg2);border:1px solid var(--line);
-    color:var(--accent);font-weight:700;font-size:13px;display:flex;align-items:center;justify-content:center}
-  a{color:var(--accent)}
-  footer{text-align:center;color:var(--dim);font-size:13px;margin-top:32px;line-height:1.7}
-  .disc{font-size:12px;color:#6b7482;margin-top:18px;text-align:center;max-width:620px;margin-left:auto;margin-right:auto}
+    width:26px;height:26px;border-radius:50%;background:var(--bg2);border:1px solid rgba(255,120,40,.4);
+    color:var(--fire1);font-family:"Orbitron",sans-serif;font-weight:800;font-size:12px;
+    display:flex;align-items:center;justify-content:center}
+  a{color:var(--fire1)}
+  a:hover{color:#ffce9c}
+  footer{text-align:center;color:var(--dim);font-size:13px;margin-top:32px;line-height:1.8}
+  .disc{font-size:12px;color:#7a7186;margin-top:18px;text-align:center;max-width:620px;margin:18px auto 0}
 </style>
 </head>
 <body>
 <div class="wrap">
   <header>
-    <h1 class="logo">Evil<span>·</span>Flasher</h1>
-    <p class="tag">Flash Evil-M5Project onto your ESP32, right from the browser.</p>
+    <span class="logo-wrap"><img class="logo" src="assets/logo.jpg" alt="Evil-M5Project demon logo" width="140" height="140"></span>
+    <h1 class="wordmark">Evil<span class="dot">·</span>Flasher</h1>
+    <p class="tag">Summon Evil-M5Project onto your ESP32 — straight from the browser.</p>
     <span class="badge">⚡ No install · Web Serial</span>
   </header>
 
@@ -168,9 +216,8 @@ function render(){
   if(supported){
     const b=document.createElement('esp-web-install-button');
     b.setAttribute('manifest', `manifests/${d.id}.json`);
-    const btn=document.createElement('button'); btn.slot='activate';
+    const btn=document.createElement('button'); btn.slot='activate'; btn.className='btn-install';
     btn.textContent='⚡ Install '+d.name;
-    btn.style.cssText='padding:14px 26px;border:0;border-radius:10px;background:var(--accent);color:#04120a;font-size:16px;font-weight:700;cursor:pointer';
     b.appendChild(btn);
     cta.appendChild(b);
   } else {
