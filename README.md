@@ -12,7 +12,7 @@ install. Includes the **AWOK Dual ESP32 Mini v2** port.
 |---|---|---|---|
 | AWOK Dual ESP32 Mini v2 | ESP32 | 1.5.6 | `firmware/` (merged, hosted here) |
 | M5Cardputer | ESP32-S3 | 1.5.5 | raw Evil-M5Project |
-| M5Cardputer ADV | ESP32-S3 | 1.4.5 | raw Evil-M5Project |
+| M5Cardputer ADV | ESP32-S3 | 1.5.5 | same bin as M5Cardputer |
 | M5AtomS3 | ESP32-S3 | 1.1.7 | raw Evil-M5Project |
 | M5Stack CoreS3 / SE | ESP32-S3 | 1.1.9 | raw Evil-M5Project |
 | M5Stack Core2 | ESP32 | 1.3.9 | raw Evil-M5Project |
