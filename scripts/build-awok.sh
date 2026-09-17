@@ -4,7 +4,7 @@
 set -euo pipefail
 SK="${1:?usage: build-awok.sh <arduino-sketch-build-dir> [version]}"
 VER="${2:-1.5.6}"
-OUT="$(dirname "$0")/../firmware/awok-dual-mini-v2/awok-dual-mini-v2-v${VER}.bin"
+OUT="$(dirname "$0")/../firmware/awok-dual-mini-v2/evil-awok-mini-v2-v${VER}-full.bin"
 BOOT_APP0="$(find "$HOME/.arduino15/packages/m5stack" -name boot_app0.bin | head -1)"
 
 esptool --chip esp32 merge-bin -o "$OUT" \
