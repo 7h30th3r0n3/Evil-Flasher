@@ -18,6 +18,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;800;900&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/xterm@5.3.0/css/xterm.min.css">
 <style>
   :root{
     --bg:#08060a; --bg2:#140f1b; --card:#17121f; --line:#2d2138;
@@ -102,6 +103,18 @@
   a:hover{color:#ffce9c}
   footer{text-align:center;color:var(--dim);font-size:13px;margin-top:32px;line-height:1.8}
   .disc{font-size:12px;color:#7a7186;margin-top:18px;text-align:center;max-width:620px;margin:18px auto 0}
+
+  .serial-bar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-bottom:14px}
+  .serial-bar select{width:auto;flex:0 0 auto;min-width:130px}
+  .btn-sm{padding:11px 18px;border-radius:10px;border:1px solid var(--line);background:var(--bg2);
+    color:var(--txt);font-family:"Share Tech Mono",monospace;font-size:14px;cursor:pointer;transition:border-color .12s}
+  .btn-sm:hover:not(:disabled){border-color:var(--fire1)}
+  .btn-sm.primary{border:0;color:#1a0600;font-weight:700;background:linear-gradient(135deg,var(--fire1),var(--fire2))}
+  .btn-sm:disabled{opacity:.5;cursor:not-allowed}
+  .serial-status{font-family:"Share Tech Mono",monospace;font-size:12px;color:var(--dim);margin-left:auto}
+  .serial-status.on{color:var(--fire1)}
+  #terminal{height:320px;background:#000;border:1px solid var(--line);border-radius:10px;padding:8px 6px}
+  #terminal .xterm{height:100%}
 </style>
 </head>
 <body>
@@ -137,6 +150,29 @@
     </div>
   </div>
 
+  <div class="card">
+    <label class="fld">Serial monitor · read your device, no flashing</label>
+    <div class="serial-bar">
+      <select id="baud" title="Baud rate">
+        <option>115200</option>
+        <option>9600</option>
+        <option>74880</option>
+        <option>230400</option>
+        <option>460800</option>
+        <option>921600</option>
+      </select>
+      <button id="serial-connect" class="btn-sm primary">🔌 Connect</button>
+      <button id="serial-clear" class="btn-sm">Clear</button>
+      <span class="serial-status" id="serial-status">disconnected</span>
+    </div>
+    <div id="terminal"></div>
+    <div class="alert warn" id="serial-hint" style="margin-top:12px">
+      Live serial console — no flashing required. Type in the terminal to send keystrokes to the device.
+      Evil firmware runs at <b>115200</b> baud. This monitor sends <b>no Improv probes</b>, so the log stays clean.
+      Only one program can hold the port: close the flasher dialog before connecting.
+    </div>
+  </div>
+
   <div class="card notes">
     <h3>Good to know</h3>
     <ul>
@@ -164,6 +200,8 @@
   </footer>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/xterm@5.3.0/lib/xterm.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/xterm-addon-fit@0.8.0/lib/xterm-addon-fit.min.js"></script>
 <script type="module" src="https://unpkg.com/esp-web-tools@10/dist/web/install-button.js?module"></script>
 <script>
 const DEVICES = [
@@ -231,6 +269,66 @@ function render(){
 }
 sel.addEventListener('change',render);
 render();
+
+// ---------- Serial monitor (Web Serial + xterm) ----------
+let spPort=null, spReader=null, spWriter=null, term=null, fit=null, spKeep=false;
+const stBtn=document.getElementById('serial-connect');
+const stStatus=document.getElementById('serial-status');
+
+function initTerm(){
+  if(term) return;
+  term=new Terminal({
+    fontFamily:'"Share Tech Mono", ui-monospace, monospace', fontSize:13, convertEol:true,
+    cursorBlink:true, scrollback:5000,
+    theme:{background:'#000000', foreground:'#f1eaf2', cursor:'#ff7a2b', selectionBackground:'#5b2a86'}
+  });
+  fit=new FitAddon.FitAddon(); term.loadAddon(fit);
+  term.open(document.getElementById('terminal'));
+  try{ fit.fit(); }catch(e){}
+  window.addEventListener('resize', ()=>{ try{ fit.fit(); }catch(e){} });
+  term.onData(d=>{ if(spWriter){ spWriter.write(new TextEncoder().encode(d)); } });
+}
+async function readLoop(){
+  while(spKeep && spPort && spPort.readable){
+    spReader=spPort.readable.getReader();
+    try{
+      while(true){ const {value,done}=await spReader.read(); if(done) break; if(value) term.write(value); }
+    }catch(e){/* stream error on disconnect/reset */}
+    finally{ try{ spReader.releaseLock(); }catch(e){} }
+  }
+}
+async function serialConnect(){
+  try{
+    initTerm();
+    spPort=await navigator.serial.requestPort();
+    const baudRate=parseInt(document.getElementById('baud').value,10)||115200;
+    await spPort.open({baudRate});
+    spKeep=true;
+    spWriter=spPort.writable.getWriter();
+    stBtn.textContent='⏏ Disconnect'; stStatus.textContent='connected @ '+baudRate; stStatus.classList.add('on');
+    term.writeln('\x1b[38;5;208m-- connected @ '+baudRate+' baud --\x1b[0m');
+    readLoop();
+  }catch(e){
+    if(String(e.name)!=='NotFoundError'){ initTerm(); term.writeln('\x1b[31m'+(e.message||e)+'\x1b[0m'); }
+  }
+}
+async function serialDisconnect(){
+  spKeep=false;
+  try{ if(spReader) await spReader.cancel(); }catch(e){}
+  try{ if(spWriter){ spWriter.releaseLock(); spWriter=null; } }catch(e){}
+  try{ if(spPort) await spPort.close(); }catch(e){}
+  spPort=null;
+  stBtn.textContent='🔌 Connect'; stStatus.textContent='disconnected'; stStatus.classList.remove('on');
+  if(term) term.writeln('\x1b[90m-- disconnected --\x1b[0m');
+}
+if(supported){
+  stBtn.addEventListener('click', ()=>{ if(spPort) serialDisconnect(); else serialConnect(); });
+  document.getElementById('serial-clear').addEventListener('click', ()=>{ if(term) term.clear(); });
+}else{
+  stBtn.disabled=true; document.getElementById('serial-clear').disabled=true;
+  document.getElementById('baud').disabled=true;
+  stStatus.textContent='Web Serial not supported';
+}
 </script>
 </body>
 </html>
