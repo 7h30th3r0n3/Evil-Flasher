@@ -1,0 +1,9 @@
+{
+  "name": "Evil-Cardputer → AWOK Dual Touch v2",
+  "version": "1.5.6",
+  "new_install_prompt_erase": true,
+  "builds": [
+    { "chipFamily": "ESP32",
+      "parts": [ { "path": "../firmware/awok-dual-touch-v2/evil-awok-touch-v2-v1.5.6-full.bin", "offset": 0 } ] }
+  ]
+}
