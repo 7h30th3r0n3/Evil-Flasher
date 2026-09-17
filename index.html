@@ -151,25 +151,28 @@
   </div>
 
   <div class="card">
-    <label class="fld">Serial monitor · read your device, no flashing</label>
     <div class="serial-bar">
-      <select id="baud" title="Baud rate">
-        <option>115200</option>
-        <option>9600</option>
-        <option>74880</option>
-        <option>230400</option>
-        <option>460800</option>
-        <option>921600</option>
-      </select>
-      <button id="serial-connect" class="btn-sm primary">🔌 Connect</button>
-      <button id="serial-clear" class="btn-sm">Clear</button>
-      <span class="serial-status" id="serial-status">disconnected</span>
+      <button id="serial-connect" class="btn-sm primary">📜 Serial Logs</button>
+      <span class="serial-status" id="serial-status">read your device without flashing</span>
     </div>
-    <div id="terminal"></div>
-    <div class="alert warn" id="serial-hint" style="margin-top:12px">
-      Live serial console - no flashing required. Type in the terminal to send keystrokes to the device.
-      Evil firmware runs at <b>115200</b> baud. This monitor sends <b>no Improv probes</b>, so the log stays clean.
-      Only one program can hold the port: close the flasher dialog before connecting.
+    <div id="serial-panel" hidden>
+      <div class="serial-bar" style="margin-top:14px">
+        <select id="baud" title="Baud rate">
+          <option>115200</option>
+          <option>9600</option>
+          <option>74880</option>
+          <option>230400</option>
+          <option>460800</option>
+          <option>921600</option>
+        </select>
+        <button id="serial-clear" class="btn-sm">Clear</button>
+      </div>
+      <div id="terminal"></div>
+      <div class="alert warn" id="serial-hint" style="margin-top:12px">
+        Live serial console at <b>115200</b> baud (Evil default). Type in the terminal to send keystrokes.
+        Sends <b>no Improv probes</b>, so the log stays clean. Only one program can hold the port -
+        close the flasher dialog first. Change baud, then reconnect, to switch speed.
+      </div>
     </div>
   </div>
 
@@ -297,19 +300,20 @@ async function readLoop(){
     finally{ try{ spReader.releaseLock(); }catch(e){} }
   }
 }
+function revealPanel(){ document.getElementById('serial-panel').hidden=false; initTerm(); }
 async function serialConnect(){
   try{
-    initTerm();
     spPort=await navigator.serial.requestPort();
     const baudRate=parseInt(document.getElementById('baud').value,10)||115200;
     await spPort.open({baudRate});
+    revealPanel();
     spKeep=true;
     spWriter=spPort.writable.getWriter();
-    stBtn.textContent='⏏ Disconnect'; stStatus.textContent='connected @ '+baudRate; stStatus.classList.add('on');
+    stBtn.textContent='⏏ Close'; stStatus.textContent='connected @ '+baudRate; stStatus.classList.add('on');
     term.writeln('\x1b[38;5;208m-- connected @ '+baudRate+' baud --\x1b[0m');
     readLoop();
   }catch(e){
-    if(String(e.name)!=='NotFoundError'){ initTerm(); term.writeln('\x1b[31m'+(e.message||e)+'\x1b[0m'); }
+    if(String(e.name)!=='NotFoundError'){ revealPanel(); term.writeln('\x1b[31m'+(e.message||e)+'\x1b[0m'); }
   }
 }
 async function serialDisconnect(){
@@ -318,7 +322,7 @@ async function serialDisconnect(){
   try{ if(spWriter){ spWriter.releaseLock(); spWriter=null; } }catch(e){}
   try{ if(spPort) await spPort.close(); }catch(e){}
   spPort=null;
-  stBtn.textContent='🔌 Connect'; stStatus.textContent='disconnected'; stStatus.classList.remove('on');
+  stBtn.textContent='📜 Serial Logs'; stStatus.textContent='disconnected'; stStatus.classList.remove('on');
   if(term) term.writeln('\x1b[90m-- disconnected --\x1b[0m');
 }
 if(supported){
