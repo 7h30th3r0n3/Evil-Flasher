@@ -1,0 +1,9 @@
+{
+  "name": "Evil-AtomS3R (Cardputer fork v1.5.6)",
+  "version": "1.5.6",
+  "new_install_prompt_erase": true,
+  "builds": [
+    { "chipFamily": "ESP32-S3",
+      "parts": [ { "path": "../firmware/evil-atoms3r/evil-atoms3r-v1.5.6-full.bin", "offset": 0 } ] }
+  ]
+}
