@@ -1,0 +1,9 @@
+{
+  "name": "Evil-M5Tab5 (M5Stack Tab5)",
+  "version": "1.5.1",
+  "new_install_prompt_erase": true,
+  "builds": [
+    { "chipFamily": "ESP32-P4",
+      "parts": [ { "path": "../firmware/evil-tab5/evil-m5tab5-v1.5.1-full.bin", "offset": 0 } ] }
+  ]
+}
