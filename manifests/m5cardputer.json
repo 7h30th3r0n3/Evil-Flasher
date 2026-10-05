@@ -1,9 +1,9 @@
 {
   "name": "Evil-Cardputer (M5Cardputer)",
-  "version": "1.5.5",
+  "version": "1.5.6",
   "new_install_prompt_erase": true,
   "builds": [
     { "chipFamily": "ESP32-S3",
-      "parts": [ { "path": "../firmware/m5cardputer/evil-cardputer-v1.5.5-full.bin", "offset": 0 } ] }
+      "parts": [ { "path": "../firmware/m5cardputer/evil-cardputer-v1.5.6-full.bin", "offset": 0 } ] }
   ]
 }
