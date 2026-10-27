@@ -1,0 +1,9 @@
+{
+  "name": "Evil-Sentinel node - ESP32-C6 (2.4 GHz)",
+  "version": "1.0.0",
+  "new_install_prompt_erase": true,
+  "builds": [
+    { "chipFamily": "ESP32-C6",
+      "parts": [ { "path": "../firmware/evil-sentinel-c6/evil-sentinel-c6-v1.0.0-full.bin", "offset": 0 } ] }
+  ]
+}

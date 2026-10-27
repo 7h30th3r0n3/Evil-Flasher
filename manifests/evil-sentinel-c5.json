@@ -1,0 +1,9 @@
+{
+  "name": "Evil-Sentinel node - ESP32-C5 (2.4 + 5 GHz dual-band)",
+  "version": "1.0.0",
+  "new_install_prompt_erase": true,
+  "builds": [
+    { "chipFamily": "ESP32-C5",
+      "parts": [ { "path": "../firmware/evil-sentinel-c5/evil-sentinel-c5-v1.0.0-full.bin", "offset": 0 } ] }
+  ]
+}

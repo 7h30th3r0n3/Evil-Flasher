@@ -19,6 +19,9 @@ install. Includes the **AWOK Dual ESP32 Mini v2** port.
 | M5Stack Fire | ESP32 | 1.3.9 | raw Evil-M5Project |
 | M5StickC Plus/Plus2 | ESP32 | beta | raw Evil-M5Project |
 | CYD (Cheap Yellow Display) | ESP32 | beta | raw Evil-M5Project |
+| Evil-Sentinel node (M5StampC5) | ESP32-C5 | 1.0.0 | `firmware/` (merged, hosted here) |
+| Evil-Sentinel node (ESP32-C3 SuperMini) | ESP32-C3 | 1.0.0 | `firmware/` (merged, hosted here) |
+| Evil-Sentinel node (M5 NanoC6) | ESP32-C6 | 1.0.0 | `firmware/` (merged, hosted here) |
 
 Works on **Chrome / Edge desktop only** (Web Serial). Not Firefox, Safari, iOS or Android.
 

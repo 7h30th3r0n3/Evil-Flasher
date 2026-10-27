@@ -1,0 +1,9 @@
+{
+  "name": "Evil-Sentinel node - ESP32-C3 (2.4 GHz)",
+  "version": "1.0.0",
+  "new_install_prompt_erase": true,
+  "builds": [
+    { "chipFamily": "ESP32-C3",
+      "parts": [ { "path": "../firmware/evil-sentinel-c3/evil-sentinel-c3-v1.0.0-full.bin", "offset": 0 } ] }
+  ]
+}
