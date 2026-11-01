@@ -82,6 +82,11 @@
   .btn-install:hover{transform:translateY(-1px);box-shadow:0 10px 30px rgba(255,60,20,.55),0 0 0 1px rgba(255,180,120,.5) inset}
   .btn-fallback{padding:14px 22px;border-radius:12px;background:#241a2e;color:var(--dim);
     border:1px solid var(--line);font-size:16px;cursor:not-allowed}
+  .btn-download{display:inline-block;margin-left:12px;padding:14px 22px;border-radius:12px;
+    background:#1c2436;color:#cfe3ff;border:1px solid var(--line);font-family:"Orbitron",sans-serif;
+    font-weight:700;font-size:14px;letter-spacing:.3px;text-decoration:none;
+    transition:transform .12s ease,box-shadow .12s ease}
+  .btn-download:hover{transform:translateY(-1px);box-shadow:0 8px 22px rgba(40,90,200,.35)}
 
   .notes{margin-top:18px;border-top:1px solid var(--line);padding-top:16px}
   .notes h3{margin:0 0 10px;font-family:"Share Tech Mono",monospace;font-size:13px;
@@ -167,10 +172,10 @@
 <script type="module" src="https://unpkg.com/esp-web-tools@10/dist/web/install-button.js?module"></script>
 <script>
 const DEVICES = [
-  { group:"M5Stack", id:"m5cardputer", name:"Evil-Cardputer", chip:"ESP32-S3", flash:"8 MB", ver:"1.5.6",
+  { group:"M5Stack", id:"m5cardputer", name:"Evil-Cardputer", chip:"ESP32-S3", flash:"8 MB", ver:"1.5.7",
     dl:"Hold the <b>G0</b> button <b>while</b> plugging in USB to enter download mode.",
     note:"" },
-  { group:"M5Stack", id:"m5cardputer", name:"Evil-Cardputer ADV", chip:"ESP32-S3", flash:"8 MB", ver:"1.5.6",
+  { group:"M5Stack", id:"m5cardputer", name:"Evil-Cardputer ADV", chip:"ESP32-S3", flash:"8 MB", ver:"1.5.7",
     dl:"Hold the <b>G0</b> button <b>while</b> plugging in USB to enter download mode.",
     note:"Same firmware as the Cardputer - flashes the identical binary." },
   { group:"M5Stack", id:"m5atoms3", name:"Evil-AtomS3", chip:"ESP32-S3", flash:"16 MB", ver:"1.1.7",
@@ -249,6 +254,18 @@ function render(){
     const f=document.createElement('button'); f.className='btn-fallback';
     f.textContent='Browser not supported'; cta.appendChild(f);
   }
+  // Download-only option (grab the .bin without flashing; works in any browser).
+  // The binary path is read from the device manifest and resolved to a real URL.
+  const dl=document.createElement('a'); dl.className='btn-download';
+  dl.textContent='⬇️ Download .bin'; dl.style.display='none';
+  dl.setAttribute('rel','noopener'); cta.appendChild(dl);
+  const curId=d.id;
+  const manUrl=new URL(`manifests/${d.id}.json`, location.href);
+  fetch(manUrl).then(r=>r.json()).then(m=>{
+    if(DEVICES[sel.value].id!==curId) return;              // selection changed; ignore stale fetch
+    const b0=m.builds&&m.builds[0], p=b0&&b0.parts&&b0.parts[0]&&b0.parts[0].path;
+    if(p){ dl.href=new URL(p, manUrl).href; dl.setAttribute('download',''); dl.style.display=''; }
+  }).catch(()=>{});
 }
 sel.addEventListener('change',render);
 render();
