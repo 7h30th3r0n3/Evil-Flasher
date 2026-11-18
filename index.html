@@ -107,6 +107,26 @@
   a:hover{color:#ffce9c}
   footer{text-align:center;color:var(--dim);font-size:13px;margin-top:32px;line-height:1.8}
   .disc{font-size:12px;color:#7a7186;margin-top:18px;text-align:center;max-width:620px;margin:18px auto 0}
+
+  /* --- serial monitor --- */
+  .slive{display:inline-block;width:9px;height:9px;border-radius:50%;background:#555;margin-right:7px;vertical-align:middle}
+  .slive.on{background:#39d98a;box-shadow:0 0 8px #39d98a}
+  .serialbar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:12px 0}
+  .sbtn{padding:11px 16px;border-radius:10px;border:1px solid var(--line);cursor:pointer;background:#241a2e;
+    color:var(--txt);font-size:14px;font-family:"Share Tech Mono",monospace;transition:transform .12s ease,box-shadow .12s ease}
+  .sbtn:hover:not(:disabled){transform:translateY(-1px)}
+  .sbtn.primary{background:linear-gradient(135deg,var(--fire1),var(--fire2));color:#1a0600;border:0;font-weight:700}
+  .sbtn:disabled{opacity:.45;cursor:not-allowed}
+  .baudsel{padding:11px 12px;background:var(--bg2);color:var(--txt);border:1px solid var(--line);border-radius:10px;
+    font-family:"Share Tech Mono",monospace;font-size:14px}
+  .term{background:#0b0710;border:1px solid var(--line);border-radius:10px;height:270px;overflow:auto;padding:12px 14px;
+    font-family:"Share Tech Mono",monospace;font-size:13px;line-height:1.5;color:#d7f5df;white-space:pre-wrap;word-break:break-word}
+  .term .sys{color:var(--warn)} .term .tx{color:var(--cyan)}
+  .sendrow{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}
+  .sendrow input{flex:1;min-width:180px;padding:11px 12px;background:var(--bg2);color:var(--txt);border:1px solid var(--line);
+    border-radius:10px;font-family:"Share Tech Mono",monospace;font-size:14px}
+  .sendrow input:focus,.baudsel:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px rgba(255,74,24,.18)}
+  .scheck{display:flex;align-items:center;gap:6px;color:var(--dim);font-size:13px}
 </style>
 </head>
 <body>
@@ -140,6 +160,36 @@
       </ol>
       <div class="alert warn" id="devnote" style="margin-top:14px"></div>
     </div>
+  </div>
+
+  <div class="card">
+    <label class="fld">3 · Serial monitor</label>
+    <p style="color:var(--dim);margin:0 0 4px;font-size:14px">
+      <span class="slive" id="sdot"></span><span id="sstat">Not connected</span>
+    </p>
+    <div class="serialbar">
+      <button class="sbtn primary" id="sconn">🔌 Open console</button>
+      <button class="sbtn" id="sdisc" disabled>Disconnect</button>
+      <select class="baudsel" id="sbaud" title="Baud rate">
+        <option>115200</option><option>921600</option><option>460800</option><option>74880</option><option>9600</option>
+      </select>
+      <button class="sbtn" id="sclear">Clear</button>
+      <label class="scheck"><input type="checkbox" id="sauto" checked> auto-reconnect</label>
+      <label class="scheck"><input type="checkbox" id="sreset"> reset board on open</label>
+    </div>
+    <div class="term" id="term"></div>
+    <div class="sendrow">
+      <input id="sinput" placeholder="type a command (e.g. sd cat /evil/mitm/usbmitm.log) then Enter …" autocomplete="off" spellcheck="false" disabled>
+      <select class="baudsel" id="seol" title="Line ending">
+        <option value="crlf">CR+LF</option><option value="lf">LF</option><option value="cr">CR</option><option value="none">none</option>
+      </select>
+      <button class="sbtn primary" id="ssend" disabled>Send</button>
+    </div>
+    <p style="color:#7a7186;font-size:12px;margin:10px 0 0">
+      Reuses the port you just flashed — no device picker. By default it attaches <b>without resetting</b>
+      the board, so you read the firmware already running (a boot happens only on first-ever grant, or if you
+      tick “reset board on open”). Same Chrome/Edge desktop requirement as flashing.
+    </p>
   </div>
 
   <div class="card notes">
@@ -267,6 +317,119 @@ function render(){
 }
 sel.addEventListener('change',render);
 render();
+</script>
+
+<script>
+/* ---- Serial monitor (native Web Serial) --------------------------------
+   Reuses a port already authorized by the flash step via getPorts(), so no
+   device picker on the common "flash then watch" flow. Attaches WITHOUT a
+   DTR/RTS pulse by default (setSignals false), so it reads the firmware that
+   is already running instead of forcing a reboot. Auto-reconnects across the
+   USB re-enumeration that a board reset causes. */
+(function(){
+  const term=document.getElementById('term'), stat=document.getElementById('sstat'), dot=document.getElementById('sdot');
+  const bConn=document.getElementById('sconn'), bDisc=document.getElementById('sdisc'), bClear=document.getElementById('sclear');
+  const inp=document.getElementById('sinput'), bSend=document.getElementById('ssend');
+  const baudSel=document.getElementById('sbaud'), eolSel=document.getElementById('seol');
+  const autoCb=document.getElementById('sauto'), resetCb=document.getElementById('sreset');
+  if(!('serial' in navigator)){ bConn.disabled=true; bConn.textContent='Web Serial unsupported'; return; }
+
+  let port=null, reader=null, writer=null, keepReading=false, manualClose=false, reconnecting=false;
+  const EOL={crlf:"\r\n", lf:"\n", cr:"\r", none:""};
+
+  function add(txt, cls){
+    const atBottom = term.scrollHeight - term.clientHeight - term.scrollTop < 40;
+    const span=document.createElement('span'); if(cls) span.className=cls; span.textContent=txt; term.appendChild(span);
+    while(term.childNodes.length>1500) term.removeChild(term.firstChild);
+    if(atBottom) term.scrollTop=term.scrollHeight;
+  }
+  const sys=m=>add('\n[* '+m+']\n','sys');
+  function setLive(on){
+    dot.classList.toggle('on',on);
+    stat.textContent = on ? ('Connected · '+baudSel.value+' baud') : 'Not connected';
+    bConn.disabled=on; bDisc.disabled=!on; inp.disabled=!on; bSend.disabled=!on; baudSel.disabled=on;
+  }
+
+  async function pickPort(){
+    const granted = await navigator.serial.getPorts();   // ports already authorized (e.g. the one just flashed)
+    if(granted.length) return granted[granted.length-1]; // most-recently granted = usually the flashed device
+    return await navigator.serial.requestPort();         // first time only: one picker (this click is the gesture)
+  }
+
+  async function connect(){
+    try{ port = await pickPort(); }
+    catch(e){ sys('no port selected'); return; }
+    await openPort(true);
+  }
+
+  async function openPort(first){
+    try{
+      await port.open({ baudRate: parseInt(baudSel.value,10) });
+      if(!(first && resetCb.checked)){
+        try{ await port.setSignals({ dataTerminalReady:false, requestToSend:false }); }catch(e){}  // don't reboot the board
+      }
+      manualClose=false; keepReading=true; reconnecting=false; setLive(true);
+      sys(first ? (resetCb.checked ? 'connected — board reset, boot log follows'
+                                   : 'attached to the running firmware (no reset) — type a command below')
+                : 'reconnected');
+      writer = port.writable.getWriter();
+      readLoop();
+    }catch(e){ sys('open failed: '+(e.message||e)); setLive(false); }
+  }
+
+  async function readLoop(){
+    const dec=new TextDecoder();
+    while(keepReading && port && port.readable){
+      reader = port.readable.getReader();
+      try{
+        for(;;){ const {value,done}=await reader.read(); if(done) break; if(value) add(dec.decode(value,{stream:true})); }
+      }catch(e){ /* device reset / re-enumerated / unplugged */ }
+      finally{ try{ reader.releaseLock(); }catch(e){} reader=null; }
+      if(!keepReading) break;
+      if(!manualClose && autoCb.checked){ scheduleReconnect(); return; }
+      break;
+    }
+  }
+
+  function scheduleReconnect(){
+    if(reconnecting) return; reconnecting=true;
+    sys('link dropped (reset?) — reconnecting…');
+    try{ if(writer){ writer.releaseLock(); writer=null; } }catch(e){}
+    try{ port.close(); }catch(e){}
+    let tries=0;
+    const t=setInterval(async ()=>{
+      tries++;
+      try{
+        const ports=await navigator.serial.getPorts();
+        const p = ports.find(x=>x===port) || ports[ports.length-1];
+        if(p){ clearInterval(t); port=p; await openPort(false); }
+      }catch(e){}
+      if(tries>25){ clearInterval(t); reconnecting=false; sys('reconnect gave up — click Open console'); setLive(false); }
+    }, 700);
+  }
+
+  async function disconnect(){
+    manualClose=true; keepReading=false;
+    try{ if(reader) await reader.cancel(); }catch(e){}
+    try{ if(writer){ try{ await writer.close(); }catch(e){} try{ writer.releaseLock(); }catch(e){} writer=null; } }catch(e){}
+    try{ await port.close(); }catch(e){}
+    setLive(false); sys('disconnected');
+  }
+
+  async function send(){
+    if(!writer) return;
+    const line=inp.value; inp.value='';
+    try{ await writer.write(new TextEncoder().encode(line + (EOL[eolSel.value]||''))); add(line+'\n','tx'); }
+    catch(e){ sys('write failed: '+(e.message||e)); }
+  }
+
+  bConn.onclick=connect; bDisc.onclick=disconnect; bSend.onclick=send;
+  bClear.onclick=()=>{ term.textContent=''; };
+  inp.addEventListener('keydown',e=>{ if(e.key==='Enter'){ e.preventDefault(); send(); } });
+  navigator.serial.addEventListener('disconnect', ev=>{
+    if(port && ev.target===port && !manualClose){ sys('USB device removed'); if(!autoCb.checked){ keepReading=false; setLive(false); } }
+  });
+})();
 </script>
 </body>
 </html>
