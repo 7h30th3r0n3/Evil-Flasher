@@ -1,0 +1,9 @@
+{
+  "name": "Evil-Cardputer Master co-processor - M5Stamp C5 (2.4 + 5 GHz)",
+  "version": "1.5.9",
+  "new_install_prompt_erase": true,
+  "builds": [
+    { "chipFamily": "ESP32-C5",
+      "parts": [ { "path": "../firmware/cardputer-master-c5/slave-unified-c5-v1.5.9-full.bin", "offset": 0 } ] }
+  ]
+}
